@@ -3,6 +3,7 @@
 #' @param delta Event-is-observed indicator
 #' @param x_train Design matrix (excludes times)
 #' @param mc.cores Number of cores to use
+#' @param ... Other parameters to pass to \code{\link{mc.gbart}}
 #' @return pbart object
 #' @export
 deconstructed_surv_bart <- function(times, delta, x_train, mc.cores = 4, ...) {
@@ -77,10 +78,12 @@ assign_time <- function(id, id_rows, coin_flips, time_labels) {
 #' times except as an added baseline covariate)
 #' @param min_times Time at which a person was last known to have survived (only
 #' used to force congeniality with observed data)
+#' @param mc.cores Number of cores to use for prediction
 #' @return N x B matrix of imputed event times (or \code{Inf}, if censored)
 #' @export
 predict_times_from_pbart <- function(pbart_fit, time_seq, x_new,
-                                     min_times = rep(0, NROW(x_new))) {
+                                     min_times = rep(0, NROW(x_new)),
+                                     mc.cores = 4) {
   Nt <- length(time_seq)
   B <- pbart_fit$ndpost
   tx_test <- surv.pre.bart(times = time_seq,
@@ -92,7 +95,7 @@ predict_times_from_pbart <- function(pbart_fit, time_seq, x_new,
   to_keep <- which(tx_test[ , "t"] > rep(min_times, each = Nt))
   tx_test <- tx_test[to_keep, ]
   id_rows <- id_rows[to_keep]
-  pred <- predict(object = pbart_fit, newdata = tx_test)
+  pred <- predict(object = pbart_fit, newdata = tx_test, mc.cores = mc.cores)
   coin_flips <- apply(pred$prob.test,
                       MARGIN = c(1, 2),
                       FUN = rbinom,
