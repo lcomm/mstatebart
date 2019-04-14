@@ -456,14 +456,13 @@ v_ppredict_scr_b_x_new <- Vectorize(ppredict_scr_b_x_new,
 pp_scr_xnew <- function(x_new, time_seqs, fit_k1, fit_k2) {
 
   # Need all models to get predictions
-  B <- 20
   # Therefore can only predict for the minimum number of post-warmup draws
-  # B <- min(fit_k1[["0"]][[1]][["ndpost"]],
-  #          fit_k1[["1"]][[1]][["ndpost"]],
-  #          fit_k1[["0"]][[2]][["ndpost"]],
-  #          fit_k1[["1"]][[2]][["ndpost"]],
-  #          fit_k2[["0"]][["ndpost"]],
-  #          fit_k2[["1"]][["ndpost"]])
+  B <- min(fit_k1[["0"]][[1]][["ndpost"]],
+           fit_k1[["1"]][[1]][["ndpost"]],
+           fit_k1[["0"]][[2]][["ndpost"]],
+           fit_k1[["1"]][[2]][["ndpost"]],
+           fit_k2[["0"]][["ndpost"]],
+           fit_k2[["1"]][["ndpost"]])
 
   nrep <- nrow(x_new)
 
