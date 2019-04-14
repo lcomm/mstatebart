@@ -38,3 +38,22 @@ predict_is_cause1 <- function(pbart_fit, x_new, mc.cores = 4) {
                       size = 1, n = 1)
   return(coin_flips)
 }
+
+
+
+#' Predict whether or not the compartment exit is due to Cause 1
+#' based on a probit BART fit for a single MCMC iteration
+#'
+#' Second model of "Method 1" for competing risks BART
+#'
+#' @param pbart_fit BART fit object with B posterior ensemble draws
+#' @param x_new New data set of N observations for which to make predictions
+#' @param mc.cores Number of cores to use
+#' @return N x B 0/1 matrix for whether the exit was due to Cause 1
+#' @export
+predict_is_cause1_b <- function(b, pbart_fit, x_new) {
+  stopifnot(1 <= b, b <= pbart_fit$ndpost)
+  pred <- predict_prob_b(b = b, object = pbart_fit, newdata = x_new)
+  coin_flips <- rbinom(n = length(pred), size = 1, pred)
+  return(coin_flips)
+}

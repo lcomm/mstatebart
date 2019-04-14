@@ -95,6 +95,7 @@ predict_times_from_pbart <- function(pbart_fit, time_seq, x_new,
   to_keep <- which(tx_test[ , "t"] > rep(min_times, each = Nt))
   tx_test <- tx_test[to_keep, ]
   id_rows <- id_rows[to_keep]
+
   pred <- predict(object = pbart_fit, newdata = tx_test, mc.cores = mc.cores)
   coin_flips <- apply(pred$prob.test,
                       MARGIN = c(1, 2),
@@ -112,3 +113,57 @@ predict_times_from_pbart <- function(pbart_fit, time_seq, x_new,
   }
   return(event_times)
 }
+
+
+#' Use a BART probit fit of a survival model to impute event times
+#'
+#' @param pbart_fit BART probit fit
+#' @param time_seq Sequence of times at which the survival data was split
+#' @param x_new Design matrix for data to be predicted (should not contain
+#' times except as an added baseline covariate)
+#' @param min_times Time at which a person was last known to have survived (only
+#' used to force congeniality with observed data)
+#' @return N x B matrix of imputed event times (or \code{Inf}, if censored)
+#' @export
+predict_times_from_pbart_b <- function(b, pbart_fit,
+                                       time_seq, x_new = NULL,
+                                       tx_new = NULL,
+                                       min_times) {
+  Nt <- length(time_seq)
+  N <- NROW(x_new)
+  B <- pbart_fit$ndpost
+  stopifnot(1 <= b, b <= B)
+  if (is.null(tx_new)) {
+    tx_new <- surv.pre.bart(times = time_seq,
+                            delta = rep(1, Nt),
+                            x.train = x_new[rep(1, Nt), ], # x.train not used
+                            x.test  = x_new)$tx.test
+  }
+
+  unique_ids <- 1:N
+  id_rows <- rep(unique_ids, each = Nt)
+  to_keep <- which(tx_new[ , "t"] > rep(min_times, each = Nt))
+  # browser()
+  tx_new  <- tx_new[to_keep, ]
+  id_rows <- id_rows[to_keep]
+  N_stochastic <- length(unique(id_rows))
+  N_determined <- N - N_stochastic
+  which_stoch <- which(unique_ids %in% unique(id_rows))
+  which_deter <- which(!(unique_ids %in% unique(id_rows)))
+
+  pred <- predict_prob_b(b = b, object = pbart_fit, newdata = tx_new)
+  coin_flips <- rbinom(n = length(to_keep), size = 1, pred)
+  event_times <- sapply(which_stoch,
+                        FUN = assign_time,
+                        id_rows = id_rows,
+                        coin_flips = coin_flips,
+                        time_labels = tx_new[ , "t"])
+  res <- rep(NA, N)
+  if (length(which_stoch) != length(event_times)) {
+    browser()
+  }
+  res[which_stoch] <- event_times
+  res[which_deter] <- Inf
+  return(res)
+}
+

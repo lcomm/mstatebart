@@ -7,7 +7,7 @@
 plot_surv_pred <- function(surv_bart_fit, input_list) {
   stopifnot(c("times", "x_train") %in% names(input_list))
   old_times <- input_list[["times"]]
-  time_seq <- sort(unique(old_times))
+  time_seq <- sort_unique(old_times)
   x_new <- input_list[["x_train"]]
   pred <- predict_times_from_pbart(pbart_fit = surv_bart_fit,
                                    time_seq = time_seq,

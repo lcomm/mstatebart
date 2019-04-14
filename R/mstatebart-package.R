@@ -14,14 +14,17 @@
 #' @import batchtools
 #' @import ggplot2
 #' @import BART
+#' @import doParallel
 #' @import rsemicompstan
 #' @importFrom data.table rbindlist CJ
 #' @importFrom utils read.csv
 #' @importFrom gridExtra grid.arrange
 #' @importFrom RColorBrewer brewer.pal
 #' @importFrom reshape2 melt
+#' @importFrom abind abind
+#' @importFrom foreach foreach
 #' @importFrom ggpubr ggarrange
 #' @importFrom ggridges geom_density_ridges theme_ridges
-#' 
+#'
 #' @description Maybe some day
 NULL
